@@ -1,0 +1,60 @@
+server:
+  port: ${APP_PORT:9027}
+  error:
+    include-message: always
+
+app:
+  lesson:
+    service:
+      cache:
+        user:
+          enabled: ${USER_CACHE:false}
+          time-to-live: ${USER_TTL:60000}
+
+spring:
+  application:
+    name: lesson-service
+  convenient:
+    rpc:
+      rabbitmq:
+        queue: lesson-service-queue
+        append-random-for-reply-queue-name: false
+        reply-queue-prefix: lesson-service-reply-queue
+        exchange: rpc-exchange
+        replyTimeout: 50000
+  main:
+    allow-bean-definition-overriding: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${DB_NAME:lesson_service_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    generate-ddl: true
+    database-platform: org.hibernate.dialect.PostgreSQL94Dialect
+  liquibase:
+    change-log: db/db.changelog-master.yaml
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:60000}
+
+logging:
+  level:
+    root: WARN
+
+eureka:
+  instance:
+    preferIpAddress: true

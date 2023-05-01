@@ -1,0 +1,82 @@
+server:
+  port: ${APP_PORT:9002}
+  error:
+    include-message: always
+
+app:
+  user:
+    service:
+      cache:
+        staff:
+          enabled: ${STAFF_CACHE:false}
+          time-to-live: ${STAFF_TTL:60000}
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-components: always
+  health:
+    defaults:
+      enabled: false
+    staff:
+      enabled: true
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+spring:
+  application:
+    name: user-service
+  convenient:
+    rpc:
+      rabbitmq:
+        queue: user-service-queue
+        reply-queue-prefix: user-service-reply-queue
+        exchange: rpc-exchange
+        replyTimeout: 5000
+  main:
+    allow-bean-definition-overriding: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  sleuth:
+    messaging:
+      rabbit:
+        enabled: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${DB_NAME:user_service_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:60000}
+  liquibase:
+    change-log: db/db.changelog-master.yaml
+  cloud:
+    discovery:
+      client:
+        composite-indicator:
+          enabled: false
+       
+logging:
+  level:
+    root: DEBUG

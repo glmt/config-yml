@@ -1,0 +1,69 @@
+server:
+  port: ${APP_PORT:9004}
+  error:
+    include-message: always
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-components: always
+  health:
+    defaults:
+      enabled: false
+    user:
+      enabled: true
+    staff:
+      enabled: true
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+app:
+  auth:
+    service:
+      cache:
+        enabled: false
+        time-to-live: 300
+
+spring:
+  application:
+    name: auth-service
+  convenient:
+    rpc:
+      rabbitmq:
+        queue: auth-service-queue
+        reply-queue-prefix: auth-service-reply-queue
+        exchange: rpc-exchange
+        replyTimeout: 2000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  cache:
+    type: redis
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:60000}
+  cloud:
+    discovery:
+      client:
+        composite-indicator:
+          enabled: false
+
+jwt:
+  secret: BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3YERsin0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY
+  expiration: 86400
+
+logging:
+  level:
+    root: INFO

@@ -1,0 +1,84 @@
+server:
+  port: 9015
+
+app:
+  upload:
+    service:
+      store-to-dir: uploads
+      external-link: https://test1.eleonardo.org/api/upload-service
+
+spring:
+  application:
+    name: upload-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/upload_service_db
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    change-log: db/db.changelog-master.yaml
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  cloud:
+    discovery:
+      client:
+        composite-indicator:
+          enabled: false
+eureka:
+  instance:
+    preferIpAddress: true
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: /actuator
+      exposure:
+        include: [ "health","prometheus", "metrics" ]
+  endpoint:
+    health:
+      enabled: true
+      show-components: always
+      show-details: always
+    metrics:
+      enabled: true
+  health:
+    defaults:
+      enabled: false
+    gcore:
+      enabled: true
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+
+digitalocean:
+  spaces:
+    url: ${BUCKET_DOMAIN:domain}
+    region: ${BUCKET_REGION:region}
+    accessKey: ${SPACES_ACCESS_ID:accessKey}
+    secretKey: ${SPACES_SECRET_KEY:secret}
+    bucketName: ${BUCKET_NAME:bucketName}
+
+gcore:
+  apiKey: ${GCORE_APIKEY:apiKey}
+
+logging:
+  level:
+    root: INFO

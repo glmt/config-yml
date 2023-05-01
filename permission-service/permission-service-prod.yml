@@ -1,0 +1,76 @@
+server:
+  port: ${APP_PORT:9005}
+
+app:
+  permission:
+    service:
+      cache:
+        permission:
+          enabled: ${PERMISSION_CACHE:false}
+          ## 30 minut caching
+          time-to-live: ${PERMISSION_TTL:1800}
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-components: always
+  health:
+    defaults:
+      enabled: false
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+spring:
+  application:
+    name: permission-service
+  convenient:
+    rpc:
+      rabbitmq:
+        queue: permission-service-queue
+        reply-queue-prefix: permission-service-reply-queue
+        exchange: rpc-exchange
+        replyTimeout: 5000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/permission_service_db
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cache:
+    redis:
+      time-to-live: 60000
+    type: redis
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:60000}
+  liquibase:
+    change-log: db/db.changelog-master.yaml
+  cloud:
+    discovery:
+      client:
+        composite-indicator:
+          enabled: false
+
+logging:
+  level:
+    root: DEBUG

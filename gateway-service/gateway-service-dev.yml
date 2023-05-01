@@ -1,0 +1,225 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-components: always
+      show-details: always
+  health:
+    defaults:
+      enabled: false
+    auth:
+      enabled: true
+    permission:
+      enabled: true
+    lesson:
+      enabled: true
+    user:
+      enabled: true
+    staff:
+      enabled: true
+    upload:
+      enabled: true
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+app:
+  gateway:
+    service:
+      cache:
+        permission:
+          enabled: ${PERMISSION_CACHE:false}
+          time-to-live: ${PERMISSION_TTL:300}
+        auth-token:
+          enabled: ${TOKEN_AUTH_CACHE:false}
+          time-to-live: ${TOKEN_AUTH_TTL:300}
+
+
+spring:
+  application:
+    name: gateway-service
+  convenient:
+    rpc:
+      rabbitmq:
+        queue: gateway-service-queue
+        reply-queue-prefix: gateway-service-reply-queue
+        exchange: rpc-exchange
+        replyTimeout: 5000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  cache:
+    redis:
+      time-to-live: 300
+    type: redis
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:60000}
+  sleuth:
+    messaging:
+      rabbit:
+        enabled: true
+  cloud:
+    gateway:
+      httpclient:
+        wiretap: true
+      httpserver:
+          wiretap: true
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user-service-import-lb
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/groups/{groupId}/users/import,/users/import,/users/template
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+        
+        - id: user-service
+          uri: rpc://user-service
+          predicates:
+            - Path=/users/**,/admin/groups/**,/profile/**
+
+        - id: auth-service
+          uri: rpc://auth-service
+          predicates:
+            - Path=/auth/**
+
+        - id: staff-service
+          uri: rpc://staff-service
+          predicates:
+            - Path=/staff/**
+
+        - id: permission-service
+          uri: rpc://permission-service
+          predicates:
+            - Path=/roles/**,/organizations/**,/modules/**,/organizationPositions/**,/permissions/**,/profile/**
+
+        - id: notification-service
+          uri: rpc://notification-service
+          predicates:
+            - Path=/notifications/**
+
+        - id: news-service
+          uri: rpc://news-service
+          metadata:
+            module: news
+          predicates:
+            - Path=/news/**
+
+        - id: lesson-service
+          uri: rpc://lesson-service
+          metadata:
+            module: lesson
+          predicates:
+            - Path=/admin/structures/**,/admin/schedule/**,/structures/**,/admin/blocks/**,/submissions/**,/admin/submissions/**,/admin/quizzes/**,/admin/accesscontrols/**,/admin/webinars/**,/structures/**,/quiz/**,/submissions/**
+
+###########################################
+#       ONLY DEV ENV!!! BEGIN REGION:     #
+###########################################
+
+        - id: auth-service-lb
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - RewritePath=/auth-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: user-service-lb
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: staff-service-lb
+          uri: lb://staff-service
+          predicates:
+            - Path=/staff-service/**
+          filters:
+            - RewritePath=/staff-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: permission-service-lb
+          uri: lb://permission-service
+          predicates:
+            - Path=/permission-service/**
+          filters:
+            - RewritePath=/permission-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: lesson-service-lb
+          uri: lb://lesson-service
+          predicates:
+            - Path=/lesson-service/**
+          filters:
+            - RewritePath=/lesson-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: notification-service-lb
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification-service/**
+          filters:
+            - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: upload-service-lb
+          uri: lb://upload-service
+          predicates:
+            - Path=/upload-service/**
+          filters:
+            - RewritePath=/upload-service/(?<segment>.*), /$\{segment}
+            - RemoveRequestHeader=Cookie
+
+        - id: discovery-service-lb
+          uri: lb://discovery-service
+          predicates:
+            - Path=/discovery-service/**
+          filters:
+            - RewritePath=/discovery-service/(?<segment>.*), /$\{segment}
+
+        - id: swagger
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+          uri: http://localhost:${server.port}
+    discovery:
+      client:
+        composite-indicator:
+          enabled: false
+
+###########################################
+#       ONLY DEV ENV!!! END REGION;       #
+###########################################
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+#    path: /api/swagger-ui.html
+    config-url: /api/v3/api-docs/swagger-config
+    url: /api/v3/api-docs
+    
+logging:
+  level:
+    root: DEBUG
